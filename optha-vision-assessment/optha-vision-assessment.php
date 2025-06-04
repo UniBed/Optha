@@ -1,0 +1,197 @@
+<?php
+/**
+ * Plugin Name: Optha Vision Assessment
+ * Description: Provides a vision assessment form and collects lead data for lens replacement surgery suitability.
+ * Version: 1.1.0
+ * Author: OpenAI Codex
+ * License: GPLv2 or later
+ * Update URI: https://github.com/example/optha-vision-assessment
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly.
+}
+
+define( 'OPTHA_PLUGIN_FILE', __FILE__ );
+define( 'OPTHA_VERSION', '1.1.0' );
+
+require_once plugin_dir_path( __FILE__ ) . 'inc/github-updater.php';
+
+/**
+ * Register custom post type to store leads.
+ */
+function optha_register_lead_cpt() {
+    $labels = array(
+        'name'          => 'Vision Leads',
+        'singular_name' => 'Vision Lead',
+    );
+
+    $args = array(
+        'public'       => false,
+        'show_ui'      => true,
+        'labels'       => $labels,
+        'supports'     => array( 'title' ),
+    );
+
+    register_post_type( 'optha_lead', $args );
+}
+add_action( 'init', 'optha_register_lead_cpt' );
+/**
+ * Returns a random fun eye fact.
+ */
+function optha_get_fun_fact() {
+    $facts = array(
+        "Your eyes blink about 12 times every minute!",
+        "The human eye can distinguish around 10 million colors.",
+        "Eyes are the second most complex organ after the brain.",
+        "You see with your brain, not just your eyes."
+    );
+    return $facts[ array_rand( $facts ) ];
+}
+
+/**
+ * Estimate eye age. This is purely for fun and not a medical assessment.
+ */
+function optha_calculate_eye_age( $age, $condition, $wear_glasses ) {
+    $eye_age = $age;
+    switch ( $condition ) {
+        case 'none':
+            $eye_age -= 5;
+            break;
+        case 'near':
+        case 'far':
+            $eye_age -= 2;
+            break;
+        case 'cataracts':
+        case 'presbyopia':
+            $eye_age += 5;
+            break;
+    }
+    if ( ! $wear_glasses ) {
+        $eye_age -= 2;
+    }
+    return max( 18, $eye_age );
+}
+
+
+/**
+ * Shortcode to display the assessment form.
+ */
+function optha_vision_assessment_shortcode() {
+    $message = '';
+    if ( isset( $_GET['optha_assessment'] ) && $_GET['optha_assessment'] === 'thanks' ) {
+        $message = get_transient( 'optha_assessment_message' );
+        delete_transient( 'optha_assessment_message' );
+    }
+
+    ob_start();
+
+    if ( $message ) {
+        echo '<p>' . esc_html( $message ) . '</p>';
+        echo '<p class="optha-fun-fact"><em>Fun fact: ' . esc_html( optha_get_fun_fact() ) . '</em></p>';
+    }
+    ?>
+    <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+        <p>
+            <label for="optha_name">Name</label><br />
+            <input type="text" name="optha_name" id="optha_name" required />
+        </p>
+        <p>
+            <label for="optha_email">Email</label><br />
+            <input type="email" name="optha_email" id="optha_email" required />
+        </p>
+        <p>
+            <label for="optha_age">Age</label><br />
+            <input type="number" name="optha_age" id="optha_age" min="1" required />
+        </p>
+        <p>
+            <label for="optha_condition">Which condition best describes you?</label><br />
+            <select name="optha_condition" id="optha_condition">
+                <option value="none">None</option>
+                <option value="near">Near-sightedness</option>
+                <option value="far">Far-sightedness</option>
+                <option value="cataracts">Cataracts</option>
+                <option value="presbyopia">Presbyopia (age-related loss of near focus)</option>
+            </select>
+        </p>
+        <p>
+            <label>
+                <input type="checkbox" name="optha_wear_glasses" value="yes" /> I currently wear glasses or contacts
+            </label>
+        </p>
+        <input type="hidden" name="action" value="optha_assess" />
+        <?php wp_nonce_field( 'optha_assess', 'optha_nonce' ); ?>
+        <p><button type="submit">Submit</button></p>
+    </form>
+    <p style="font-size:small;">This assessment is for informational purposes only and does not constitute medical advice.</p>
+    <?php
+    return ob_get_clean();
+}
+add_shortcode( 'vision_assessment', 'optha_vision_assessment_shortcode' );
+
+/**
+ * Handle form submission.
+ */
+function optha_handle_assessment() {
+    if ( ! isset( $_POST['optha_nonce'] ) || ! wp_verify_nonce( $_POST['optha_nonce'], 'optha_assess' ) ) {
+        wp_die( 'Nonce verification failed' );
+    }
+
+    $name      = sanitize_text_field( $_POST['optha_name'] );
+    $email     = sanitize_email( $_POST['optha_email'] );
+    $age       = intval( $_POST['optha_age'] );
+    $condition = sanitize_text_field( $_POST['optha_condition'] );
+    $glasses   = isset( $_POST['optha_wear_glasses'] ) ? 'Yes' : 'No';
+
+    $candidate = false;
+    if ( $age >= 45 && in_array( $condition, array( 'cataracts', 'presbyopia' ), true ) ) {
+        $candidate = true;
+    }
+
+    $assessment = $candidate ?
+        'You may be a good candidate for lens replacement surgery. We will contact you soon.' :
+        'Based on your answers you may not be a typical candidate. We will review your information.';
+
+    $eye_age = optha_calculate_eye_age( $age, $condition, $glasses === "Yes" );
+    $post_id = wp_insert_post( array(
+        'post_status' => 'publish',
+    ) );
+
+    if ( $post_id ) {
+        update_post_meta( $post_id, 'email', $email );
+        update_post_meta( $post_id, 'age', $age );
+        update_post_meta( $post_id, 'condition', $condition );
+        update_post_meta( $post_id, 'wear_glasses', $glasses );
+        update_post_meta( $post_id, 'assessment', $assessment );
+        update_post_meta( $post_id, 'eye_age', $eye_age );
+    }
+
+    $admin_email = get_option( 'admin_email' );
+    $message     = "Name: $name\nEmail: $email\nAge: $age\nCondition: $condition\nWears glasses: $glasses\nAssessment: $assessment
+Eye Age: $eye_age";
+    $response_message = $assessment . " Your estimated eye age is " . $eye_age . ". This is not a substitute for a professional eye exam.";
+    wp_mail( $admin_email, 'New Vision Assessment Lead', $message );
+
+    set_transient( 'optha_assessment_message', $response_message, 30 );
+
+    wp_redirect( add_query_arg( 'optha_assessment', 'thanks', wp_get_referer() ) );
+    exit;
+}
+add_action( 'admin_post_nopriv_optha_assess', 'optha_handle_assessment' );
+add_action( 'admin_post_optha_assess', 'optha_handle_assessment' );
+
+/**
+ * Flush rewrite rules on activation/deactivation.
+ */
+function optha_activate() {
+    optha_register_lead_cpt();
+    flush_rewrite_rules();
+}
+register_activation_hook( __FILE__, 'optha_activate' );
+
+function optha_deactivate() {
+    flush_rewrite_rules();
+}
+register_deactivation_hook( __FILE__, 'optha_deactivate' );
+
+?>
