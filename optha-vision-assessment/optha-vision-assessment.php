@@ -5,8 +5,8 @@
  * Version: 1.2.0
  * Author: OpenAI Codex
  * License: GPLv2 or later
- * Update URI: https://github.com/example/optha-vision-assessment
- */
+ * Update URI: https://github.com/UniBed/Optha
+*/
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
@@ -35,6 +35,7 @@ function optha_register_lead_cpt() {
 
     register_post_type( 'optha_lead', $args );
 }
+add_action( 'init', 'optha_register_lead_cpt' );
 
 function optha_enqueue_styles() {
     wp_register_style( 'optha-assessment', plugins_url( 'style.css', __FILE__ ), array(), OPTHA_VERSION );

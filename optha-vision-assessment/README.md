@@ -15,7 +15,7 @@ This plugin provides a conversational vision assessment that can be embedded via
 3. Add the shortcode `[vision_assessment]` to any page or post.
 
 ### Automatic Updates
-The plugin looks for new releases on GitHub. When a new version is tagged, WordPress will offer it as an update in your dashboard.
+The plugin looks for new releases on GitHub at [UniBed/Optha](https://github.com/UniBed/Optha). When a new version is tagged, WordPress will offer it as an update in your dashboard.
 
 ## Disclaimer
 This plugin offers an informal assessment only. It does not constitute medical advice. Always consult a qualified eye care professional for a full examination and recommendation.

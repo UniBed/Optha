@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // GitHub Update Checker for Optha Vision Assessment plugin.
-define( 'OPTHA_UPDATE_REPO', 'https://api.github.com/repos/example/optha-vision-assessment' );
+define( 'OPTHA_UPDATE_REPO', 'https://api.github.com/repos/UniBed/Optha' );
 
 define( 'OPTHA_BASENAME', plugin_basename( OPTHA_PLUGIN_FILE ) );
 
