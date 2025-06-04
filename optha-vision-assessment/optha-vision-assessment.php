@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Optha Vision Assessment
  * Description: Provides a vision assessment form and collects lead data for lens replacement surgery suitability.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: OpenAI Codex
  * License: GPLv2 or later
  * Update URI: https://github.com/UniBed/Optha
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'OPTHA_PLUGIN_FILE', __FILE__ );
-define( 'OPTHA_VERSION', '1.2.0' );
+define( 'OPTHA_VERSION', '1.3.0' );
 
 require_once plugin_dir_path( __FILE__ ) . 'inc/github-updater.php';
 
@@ -109,46 +109,85 @@ function optha_vision_assessment_shortcode() {
     ob_start();
 
     if ( $message ) {
-        echo '<p>' . esc_html( $message ) . '</p>';
-        echo '<p class="optha-fun-fact"><em>Fun fact: ' . esc_html( optha_get_fun_fact() ) . '</em></p>';
-    }
+        echo '<div class="optha-result"><p>' . esc_html( $message ) . '</p>';
+        echo '<p class="optha-fun-fact"><em>Fun fact: ' . esc_html( optha_get_fun_fact() ) . '</em></p></div>';
+    } else {
     ?>
     <form class="optha-assessment-form et_pb_contact_form clearfix" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-        <p>Hello! Let's check your eyes. What's your name?</p>
-        <p><input type="text" name="optha_name" id="optha_name" required /></p>
-        <p>And your email so we can send your results:</p>
-        <p><input type="email" name="optha_email" id="optha_email" required /></p>
-        <p>How old are you?</p>
-        <p><input type="number" name="optha_age" id="optha_age" min="1" required /></p>
-        <p>Do any of these apply to you?</p>
-        <p><select name="optha_condition" id="optha_condition">
-                <option value="none">None</option>
-                <option value="near">Near-sightedness</option>
-                <option value="far">Far-sightedness</option>
-                <option value="cataracts">Cataracts</option>
-                <option value="presbyopia">Presbyopia (age-related loss of near focus)</option>
-        </select></p>
-        <p><label><input type="checkbox" name="optha_wear_glasses" value="yes" /> I currently wear glasses or contacts</label></p>
-        <p>Read the line below (no zooming in!):</p>
-        <div class="optha-vision-line" style="font-size:32px;">OPTHA</div>
-        <p><input type="text" name="optha_line1" required /></p>
-        <div class="optha-vision-line" style="font-size:24px;">VISION</div>
-        <p><input type="text" name="optha_line2" required /></p>
-        <p>Which way is the <strong>E</strong> pointing?</p>
-        <div class="optha-vision-line"><span class="optha-e" style="transform: rotate(<?php echo (int) $orientations[$correct_orientation]; ?>deg);">E</span></div>
-        <p>
-            <label><input type="radio" name="optha_orientation" value="up" required /> Up</label>
-            <label><input type="radio" name="optha_orientation" value="right" /> Right</label>
-            <label><input type="radio" name="optha_orientation" value="down" /> Down</label>
-            <label><input type="radio" name="optha_orientation" value="left" /> Left</label>
-        </p>
-        <input type="hidden" name="optha_correct_orientation" value="<?php echo esc_attr( $correct_orientation ); ?>" />
-        <input type="hidden" name="action" value="optha_assess" />
-        <?php wp_nonce_field( 'optha_assess', 'optha_nonce' ); ?>
-        <p><button type="submit">Submit</button></p>
+        <div class="optha-step">
+            <p>Hello! Let's check your eyes. What's your name?</p>
+            <p><input type="text" name="optha_name" required /></p>
+            <p><button class="optha-next">Next</button></p>
+        </div>
+        <div class="optha-step">
+            <p>And your email so we can send your results:</p>
+            <p><input type="email" name="optha_email" required /></p>
+            <p><button class="optha-next">Next</button></p>
+        </div>
+        <div class="optha-step">
+            <p>How old are you?</p>
+            <p><input type="number" name="optha_age" min="1" required /></p>
+            <p><button class="optha-next">Next</button></p>
+        </div>
+        <div class="optha-step">
+            <p>Do any of these apply to you?</p>
+            <p><select name="optha_condition" id="optha_condition">
+                    <option value="none">None</option>
+                    <option value="near">Near-sightedness</option>
+                    <option value="far">Far-sightedness</option>
+                    <option value="cataracts">Cataracts</option>
+                    <option value="presbyopia">Presbyopia (age-related loss of near focus)</option>
+            </select></p>
+            <p><label><input type="checkbox" name="optha_wear_glasses" value="yes" /> I currently wear glasses or contacts</label></p>
+            <p><button class="optha-next">Next</button></p>
+        </div>
+        <div class="optha-step">
+            <p>Read the lines below (no zooming in!)</p>
+            <div class="optha-vision-line" style="font-size:32px;">OPTHA</div>
+            <p><input type="text" name="optha_line1" required /></p>
+            <div class="optha-vision-line" style="font-size:24px;">VISION</div>
+            <p><input type="text" name="optha_line2" required /></p>
+            <p><button class="optha-next">Next</button></p>
+        </div>
+        <div class="optha-step">
+            <p>Which way is the <strong>E</strong> pointing?</p>
+            <div class="optha-vision-line"><span class="optha-e" style="transform: rotate(<?php echo (int) $orientations[$correct_orientation]; ?>deg);">E</span></div>
+            <p>
+                <label><input type="radio" name="optha_orientation" value="up" required /> Up</label>
+                <label><input type="radio" name="optha_orientation" value="right" /> Right</label>
+                <label><input type="radio" name="optha_orientation" value="down" /> Down</label>
+                <label><input type="radio" name="optha_orientation" value="left" /> Left</label>
+            </p>
+            <input type="hidden" name="optha_correct_orientation" value="<?php echo esc_attr( $correct_orientation ); ?>" />
+            <input type="hidden" name="return_url" value="<?php echo esc_url( get_permalink() ); ?>" />
+            <input type="hidden" name="action" value="optha_assess" />
+            <?php wp_nonce_field( 'optha_assess', 'optha_nonce' ); ?>
+            <p><button type="submit">See Results</button></p>
+        </div>
     </form>
     <p style="font-size:small;">This assessment is for informational purposes only and does not constitute medical advice.</p>
-    <?php
+    <script>
+    document.addEventListener('DOMContentLoaded',function(){
+        const form = document.querySelector('.optha-assessment-form');
+        if(!form) return;
+        const steps = form.querySelectorAll('.optha-step');
+        let current = 0;
+        function showStep(n){
+            steps.forEach((s,i)=>{s.style.display = i===n?'block':'none';});
+        }
+        form.addEventListener('click',function(e){
+            if(e.target.classList.contains('optha-next')){
+                e.preventDefault();
+                if(current < steps.length-1){
+                    current++;
+                    showStep(current);
+                }
+            }
+        });
+        showStep(0);
+    });
+    </script>
+    <?php }
     return ob_get_clean();
 }
 add_shortcode( 'vision_assessment', 'optha_vision_assessment_shortcode' );
@@ -210,7 +249,8 @@ Eye Age: $eye_age";
 
     set_transient( 'optha_assessment_message', $response_message, 30 );
 
-    wp_redirect( add_query_arg( 'optha_assessment', 'thanks', wp_get_referer() ) );
+    $redirect = isset( $_POST['return_url'] ) ? esc_url_raw( $_POST['return_url'] ) : home_url();
+    wp_redirect( add_query_arg( 'optha_assessment', 'thanks', $redirect ) );
     exit;
 }
 add_action( 'admin_post_nopriv_optha_assess', 'optha_handle_assessment' );

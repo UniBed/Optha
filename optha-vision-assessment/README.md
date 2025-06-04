@@ -4,6 +4,7 @@ This plugin provides a conversational vision assessment that can be embedded via
 
 ## Features
 - Conversational form styled to match Divi
+- Animated, step-by-step questions for a more engaging experience
 - Simple vision tasks (reading letters and identifying orientation) to gauge eyesight
 - Estimated eye age with playful disclaimer
 - Stores leads and emails results to the admin

@@ -26,3 +26,20 @@
     display: inline-block;
     transform-origin: center;
 }
+
+.optha-step {
+    display: none;
+    animation: optha-fade 0.3s ease;
+}
+
+@keyframes optha-fade {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.optha-result {
+    padding: 10px;
+    background: #f0f4f7;
+    border-left: 4px solid #2ea3f2;
+    margin-bottom: 20px;
+}
