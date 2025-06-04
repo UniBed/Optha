@@ -8,7 +8,7 @@ This plugin provides a conversational vision assessment that can be embedded via
 - Simple vision tasks (reading letters and identifying orientation) to gauge eyesight
 - Estimated eye age with playful disclaimer
 - Stores leads and emails results to the admin
-- Checks GitHub for updates automatically
+- Checks GitHub for updates automatically with transient caching
 
 ## Installation
 1. Upload the `optha-vision-assessment` folder to your WordPress `plugins` directory.
@@ -16,7 +16,7 @@ This plugin provides a conversational vision assessment that can be embedded via
 3. Add the shortcode `[vision_assessment]` to any page or post.
 
 ### Automatic Updates
-The plugin looks for new releases on GitHub at [UniBed/Optha](https://github.com/UniBed/Optha). When a new version is tagged, WordPress will offer it as an update in your dashboard.
+The plugin looks for new releases on GitHub at [UniBed/Optha](https://github.com/UniBed/Optha). Release data is cached for one hour to reduce API requests. When a new version is tagged, WordPress will offer it as an update in your dashboard.
 
 ## Disclaimer
 This plugin offers an informal assessment only. It does not constitute medical advice. Always consult a qualified eye care professional for a full examination and recommendation.
