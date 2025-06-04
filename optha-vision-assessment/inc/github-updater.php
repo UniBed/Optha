@@ -60,12 +60,22 @@ function optha_check_github_update( $transient ) {
 
     $remote_version = ltrim( $release->tag_name, 'v' );
 
+    $download_url = $release->zipball_url;
+    if ( ! empty( $release->assets ) ) {
+        foreach ( $release->assets as $asset ) {
+            if ( false !== stripos( $asset->name, 'optha-vision-assessment.zip' ) ) {
+                $download_url = $asset->browser_download_url;
+                break;
+            }
+        }
+    }
+
     if ( version_compare( $transient->checked[ OPTHA_BASENAME ], $remote_version, '<' ) ) {
         $plugin = (object) array(
             'slug'        => 'optha-vision-assessment',
             'new_version' => $remote_version,
             'url'         => 'https://github.com/UniBed/Optha',
-            'package'     => $release->zipball_url,
+            'package'     => $download_url,
         );
         $transient->response[ OPTHA_BASENAME ] = $plugin;
     }
@@ -87,10 +97,20 @@ function optha_plugin_info( $false, $action, $args ) {
         return false;
     }
 
+    $download_url = $release->zipball_url;
+    if ( ! empty( $release->assets ) ) {
+        foreach ( $release->assets as $asset ) {
+            if ( false !== stripos( $asset->name, 'optha-vision-assessment.zip' ) ) {
+                $download_url = $asset->browser_download_url;
+                break;
+            }
+        }
+    }
+
     $plugin = new stdClass();
     $plugin->name          = 'Optha Vision Assessment';
     $plugin->version       = ltrim( $release->tag_name, 'v' );
-    $plugin->download_link = $release->zipball_url;
+    $plugin->download_link = $download_url;
     $plugin->sections      = array( 'description' => 'Automatic updates from GitHub releases.' );
 
     return $plugin;
