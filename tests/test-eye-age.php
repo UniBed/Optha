@@ -10,4 +10,8 @@ class EyeAgeTest extends TestCase {
     public function testEyeAgeOlder() {
         $this->assertSame(55, optha_calculate_eye_age(50, 'cataracts', true));
     }
+
+    public function testEyeScore() {
+        $this->assertSame(3, optha_calculate_eye_score('OPTHA', 'VISION', 'up', 'up'));
+    }
 }

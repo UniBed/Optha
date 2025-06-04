@@ -1,17 +1,21 @@
 # Optha Vision Assessment WordPress Plugin
 
-This plugin provides a simple vision assessment questionnaire that can be embedded via the `[vision_assessment]` shortcode. Submissions are stored as a custom post type and emailed to the site administrator.
+This plugin provides a conversational vision assessment that can be embedded via the `[vision_assessment]` shortcode. Submissions are stored as a custom post type and emailed to the site administrator. Fun eye facts and an estimated "eye age" are displayed after completion.
 
-This plugin also displays a random fun fact and gives a playful estimate of your "eye age" after submission.
+## Features
+- Conversational form styled to match Divi
+- Simple vision tasks (reading letters and identifying orientation) to gauge eyesight
+- Estimated eye age with playful disclaimer
+- Stores leads and emails results to the admin
+- Checks GitHub for updates automatically
+
 ## Installation
 1. Upload the `optha-vision-assessment` folder to your WordPress `plugins` directory.
 2. Activate the plugin through the Plugins menu.
 3. Add the shortcode `[vision_assessment]` to any page or post.
 
-4. The plugin checks GitHub for updates automatically.
-
 ### Automatic Updates
-This plugin looks for new releases on GitHub. When a new version is tagged, WordPress will offer it as an update in your dashboard.
+The plugin looks for new releases on GitHub. When a new version is tagged, WordPress will offer it as an update in your dashboard.
 
 ## Disclaimer
 This plugin offers an informal assessment only. It does not constitute medical advice. Always consult a qualified eye care professional for a full examination and recommendation.

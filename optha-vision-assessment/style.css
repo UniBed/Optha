@@ -1,0 +1,28 @@
+.optha-assessment-form {
+    margin: 20px 0;
+}
+.optha-assessment-form p {
+    margin-bottom: 15px;
+}
+.optha-assessment-form input,
+.optha-assessment-form select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+.optha-assessment-form button {
+    background-color: #2ea3f2;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+.optha-assessment-form .optha-vision-line {
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 0.15em;
+    text-align: center;
+}
+.optha-assessment-form .optha-e {
+    display: inline-block;
+    transform-origin: center;
+}

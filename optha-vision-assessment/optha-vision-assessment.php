@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Optha Vision Assessment
  * Description: Provides a vision assessment form and collects lead data for lens replacement surgery suitability.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: OpenAI Codex
  * License: GPLv2 or later
  * Update URI: https://github.com/example/optha-vision-assessment
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'OPTHA_PLUGIN_FILE', __FILE__ );
-define( 'OPTHA_VERSION', '1.1.0' );
+define( 'OPTHA_VERSION', '1.2.0' );
 
 require_once plugin_dir_path( __FILE__ ) . 'inc/github-updater.php';
 
@@ -35,7 +35,12 @@ function optha_register_lead_cpt() {
 
     register_post_type( 'optha_lead', $args );
 }
-add_action( 'init', 'optha_register_lead_cpt' );
+
+function optha_enqueue_styles() {
+    wp_register_style( 'optha-assessment', plugins_url( 'style.css', __FILE__ ), array(), OPTHA_VERSION );
+    wp_enqueue_style( 'optha-assessment' );
+}
+add_action( 'wp_enqueue_scripts', 'optha_enqueue_styles' );
 /**
  * Returns a random fun eye fact.
  */
@@ -73,6 +78,20 @@ function optha_calculate_eye_age( $age, $condition, $wear_glasses ) {
     return max( 18, $eye_age );
 }
 
+function optha_calculate_eye_score($line1, $line2, $orientation, $correct_orientation) {
+    $score = 0;
+    if ( strtoupper(trim($line1)) === "OPTHA" ) {
+        $score++;
+    }
+    if ( strtoupper(trim($line2)) === "VISION" ) {
+        $score++;
+    }
+    if ( $orientation === $correct_orientation ) {
+        $score++;
+    }
+    return $score;
+}
+
 
 /**
  * Shortcode to display the assessment form.
@@ -83,6 +102,8 @@ function optha_vision_assessment_shortcode() {
         $message = get_transient( 'optha_assessment_message' );
         delete_transient( 'optha_assessment_message' );
     }
+    $orientations = array( 'up' => 0, 'right' => 90, 'down' => 180, 'left' => 270 );
+    $correct_orientation = array_rand( $orientations );
 
     ob_start();
 
@@ -91,34 +112,36 @@ function optha_vision_assessment_shortcode() {
         echo '<p class="optha-fun-fact"><em>Fun fact: ' . esc_html( optha_get_fun_fact() ) . '</em></p>';
     }
     ?>
-    <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-        <p>
-            <label for="optha_name">Name</label><br />
-            <input type="text" name="optha_name" id="optha_name" required />
-        </p>
-        <p>
-            <label for="optha_email">Email</label><br />
-            <input type="email" name="optha_email" id="optha_email" required />
-        </p>
-        <p>
-            <label for="optha_age">Age</label><br />
-            <input type="number" name="optha_age" id="optha_age" min="1" required />
-        </p>
-        <p>
-            <label for="optha_condition">Which condition best describes you?</label><br />
-            <select name="optha_condition" id="optha_condition">
+    <form class="optha-assessment-form et_pb_contact_form clearfix" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+        <p>Hello! Let's check your eyes. What's your name?</p>
+        <p><input type="text" name="optha_name" id="optha_name" required /></p>
+        <p>And your email so we can send your results:</p>
+        <p><input type="email" name="optha_email" id="optha_email" required /></p>
+        <p>How old are you?</p>
+        <p><input type="number" name="optha_age" id="optha_age" min="1" required /></p>
+        <p>Do any of these apply to you?</p>
+        <p><select name="optha_condition" id="optha_condition">
                 <option value="none">None</option>
                 <option value="near">Near-sightedness</option>
                 <option value="far">Far-sightedness</option>
                 <option value="cataracts">Cataracts</option>
                 <option value="presbyopia">Presbyopia (age-related loss of near focus)</option>
-            </select>
-        </p>
+        </select></p>
+        <p><label><input type="checkbox" name="optha_wear_glasses" value="yes" /> I currently wear glasses or contacts</label></p>
+        <p>Read the line below (no zooming in!):</p>
+        <div class="optha-vision-line" style="font-size:32px;">OPTHA</div>
+        <p><input type="text" name="optha_line1" required /></p>
+        <div class="optha-vision-line" style="font-size:24px;">VISION</div>
+        <p><input type="text" name="optha_line2" required /></p>
+        <p>Which way is the <strong>E</strong> pointing?</p>
+        <div class="optha-vision-line"><span class="optha-e" style="transform: rotate(<?php echo (int) $orientations[$correct_orientation]; ?>deg);">E</span></div>
         <p>
-            <label>
-                <input type="checkbox" name="optha_wear_glasses" value="yes" /> I currently wear glasses or contacts
-            </label>
+            <label><input type="radio" name="optha_orientation" value="up" required /> Up</label>
+            <label><input type="radio" name="optha_orientation" value="right" /> Right</label>
+            <label><input type="radio" name="optha_orientation" value="down" /> Down</label>
+            <label><input type="radio" name="optha_orientation" value="left" /> Left</label>
         </p>
+        <input type="hidden" name="optha_correct_orientation" value="<?php echo esc_attr( $correct_orientation ); ?>" />
         <input type="hidden" name="action" value="optha_assess" />
         <?php wp_nonce_field( 'optha_assess', 'optha_nonce' ); ?>
         <p><button type="submit">Submit</button></p>
@@ -142,9 +165,14 @@ function optha_handle_assessment() {
     $age       = intval( $_POST['optha_age'] );
     $condition = sanitize_text_field( $_POST['optha_condition'] );
     $glasses   = isset( $_POST['optha_wear_glasses'] ) ? 'Yes' : 'No';
+    $line1   = sanitize_text_field( $_POST['optha_line1'] );
+    $line2   = sanitize_text_field( $_POST['optha_line2'] );
+    $orientation = sanitize_text_field( $_POST['optha_orientation'] );
+    $correct_orientation = sanitize_text_field( $_POST['optha_correct_orientation'] );
 
     $candidate = false;
-    if ( $age >= 45 && in_array( $condition, array( 'cataracts', 'presbyopia' ), true ) ) {
+    $score = optha_calculate_eye_score( $line1, $line2, $orientation, $correct_orientation );
+    if ( $age >= 45 && in_array( $condition, array( 'cataracts', 'presbyopia' ), true ) && $score >= 2 ) {
         $candidate = true;
     }
 
@@ -154,7 +182,9 @@ function optha_handle_assessment() {
 
     $eye_age = optha_calculate_eye_age( $age, $condition, $glasses === "Yes" );
     $post_id = wp_insert_post( array(
-        'post_status' => 'publish',
+        'post_type'  => 'optha_lead',
+        'post_title' => $name,
+        'post_status' => 'publish'
     ) );
 
     if ( $post_id ) {
@@ -163,11 +193,16 @@ function optha_handle_assessment() {
         update_post_meta( $post_id, 'condition', $condition );
         update_post_meta( $post_id, 'wear_glasses', $glasses );
         update_post_meta( $post_id, 'assessment', $assessment );
+        update_post_meta( $post_id, 'line1', $line1 );
+        update_post_meta( $post_id, 'line2', $line2 );
+        update_post_meta( $post_id, 'orientation', $orientation );
+        update_post_meta( $post_id, 'score', $score );
         update_post_meta( $post_id, 'eye_age', $eye_age );
     }
 
     $admin_email = get_option( 'admin_email' );
     $message     = "Name: $name\nEmail: $email\nAge: $age\nCondition: $condition\nWears glasses: $glasses\nAssessment: $assessment
+Score: $score
 Eye Age: $eye_age";
     $response_message = $assessment . " Your estimated eye age is " . $eye_age . ". This is not a substitute for a professional eye exam.";
     wp_mail( $admin_email, 'New Vision Assessment Lead', $message );
