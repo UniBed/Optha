@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Optha Vision Assessment
  * Description: Provides a vision assessment form and collects lead data for lens replacement surgery suitability.
- * Version: 1.5.0
+ * Version: 1.6.0
  * Author: OpenAI Codex
  * License: GPLv2 or later
  * Update URI: https://github.com/UniBed/Optha
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'OPTHA_PLUGIN_FILE', __FILE__ );
-define( 'OPTHA_VERSION', '1.5.0' );
+define( 'OPTHA_VERSION', '1.6.0' );
 
 require_once plugin_dir_path( __FILE__ ) . 'inc/github-updater.php';
 
