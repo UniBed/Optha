@@ -1,0 +1,23 @@
+name: Build Plugin Zip
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Package plugin
+        run: |
+          cd optha-vision-assessment
+          zip -r ../optha-vision-assessment.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: optha-vision-assessment
+          path: optha-vision-assessment.zip
