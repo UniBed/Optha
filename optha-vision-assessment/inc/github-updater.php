@@ -4,6 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // GitHub Update Checker for Optha Vision Assessment plugin.
+// Repository where releases are published.
 define( 'OPTHA_UPDATE_REPO', 'https://api.github.com/repos/UniBed/Optha' );
 
 define( 'OPTHA_BASENAME', plugin_basename( OPTHA_PLUGIN_FILE ) );
@@ -95,4 +96,15 @@ function optha_plugin_info( $false, $action, $args ) {
     return $plugin;
 }
 add_filter( 'plugins_api', 'optha_plugin_info', 10, 3 );
+
+/**
+ * Clear cached release info after an update completes so the next check
+ * pulls fresh data from GitHub.
+ */
+function optha_clear_update_cache( $upgrader, $hook_extra ) {
+    if ( ! empty( $hook_extra['plugins'] ) && in_array( OPTHA_BASENAME, $hook_extra['plugins'], true ) ) {
+        delete_transient( 'optha_release_info' );
+    }
+}
+add_action( 'upgrader_process_complete', 'optha_clear_update_cache', 10, 2 );
 
